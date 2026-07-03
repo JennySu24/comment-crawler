@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>账号评论爬取报告 - 小红书</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #2c3e50; line-height:1.6; }
+.report { max-width:960px; margin:0 auto; padding:24px 16px; }
+.header { background: linear-gradient(135deg, #e74c3c 0%, #f39c12 100%); color:#fff; border-radius:16px; padding:32px; margin-bottom:24px; box-shadow: 0 4px 20px rgba(231,76,60,.3); }
+.header h1 { font-size:26px; margin-bottom:12px; }
+.meta { display:flex; flex-wrap:wrap; gap:12px; font-size:14px; opacity:.9; }
+.meta span { background:rgba(255,255,255,.2); padding:4px 12px; border-radius:20px; }
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:16px; margin-bottom:32px; }
+.stat-card { background:#fff; border-radius:12px; padding:20px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+.stat-num { font-size:32px; font-weight:700; color:#e74c3c; }
+.stat-label { font-size:13px; color:#888; margin-top:4px; }
+.section-title { font-size:20px; font-weight:600; margin-bottom:16px; color:#333; }
+.work-section { margin-bottom:32px; }
+.work-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; padding:12px 16px; background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+.work-index { font-size:18px; font-weight:700; color:#e74c3c; min-width:36px; }
+.work-info { flex:1; }
+.work-title { font-size:15px; font-weight:600; color:#333; text-decoration:none; }
+.work-title:hover { color:#e74c3c; text-decoration:underline; }
+.work-meta { font-size:12px; color:#aaa; margin-left:12px; white-space:nowrap; }
+.comment-card { background:#fff; border-radius:12px; padding:20px; margin-bottom:10px; box-shadow:0 1px 4px rgba(0,0,0,.05); }
+.card-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+.username { font-weight:600; color:#333; font-size:15px; }
+.ip-tag { font-size:11px; background:#f0f0f0; color:#999; padding:2px 8px; border-radius:10px; }
+.time { font-size:12px; color:#aaa; margin-left:auto; }
+.card-body { font-size:15px; line-height:1.8; white-space:pre-wrap; word-break:break-word; color:#444; }
+.cmt-img-wrap { display:inline-block; margin:8px 8px 0 0; }
+.cmt-img-wrap img { max-width:180px; max-height:180px; border-radius:8px; border:1px solid #eee; cursor:pointer; object-fit:cover; }
+.card-footer { margin-top:10px; display:flex; gap:16px; }
+.card-footer .stat { font-size:13px; color:#888; }
+.replies-section { margin-top:10px; padding-top:10px; border-top:1px solid #f0f0f0; }
+.reply-item { padding:4px 0; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; font-size:13px; }
+.reply-user { font-weight:600; color:#e74c3c; white-space:nowrap; }
+.reply-text { color:#555; flex:1; }
+.reply-meta { font-size:11px; color:#bbb; white-space:nowrap; }
+.empty-sm { text-align:center; padding:20px; color:#ccc; font-size:13px; }
+.footer { text-align:center; padding:24px; color:#bbb; font-size:12px; }
+@media print { body { background:#fff; } .header { box-shadow:none; } }
+</style>
+</head>
+<body>
+<div class="report">
+<div class="header">
+    <h1>📊 账号评论爬取报告</h1>
+    <div class="meta">
+        <span>平台: 小红书</span>
+        <span>账号: https://www.xiaohongshu.com/user/profile/652bfdf0000000002b0034ef?xsec_token=ABMOcPv5kNcWGkpm1jGWzCgXS1KZc4n3nqraiqlNhVTtE%3D&amp;xsec_source=pc_search</span>
+        <span>爬取时间: 2026-07-02 16:00:04</span>
+    </div>
+</div>
+
+<div class="stats">
+    <div class="stat-card"><div class="stat-num">5</div><div class="stat-label">作品数</div></div>
+    <div class="stat-card"><div class="stat-num">0</div><div class="stat-label">总评论数</div></div>
+    <div class="stat-card"><div class="stat-num">0</div><div class="stat-label">总点赞数</div></div>
+    <div class="stat-card"><div class="stat-num">0</div><div class="stat-label">带图评论</div></div>
+</div>
+
+<h2 class="section-title">📋 作品评论区详情</h2>
+
+        <div class="work-section">
+            <div class="work-header">
+                <span class="work-index">#1</span>
+                <div class="work-info">
+                    <a href="https://www.xiaohongshu.com/explore/6a26c3a1000000001c026e43" target="_blank" class="work-title">德比斯别太搞笑！场上开赛车狂飙，场下电瓶车</a>
+                    <span class="work-meta">💬 0 条评论</span>
+                </div>
+            </div>
+            <div class="empty-sm">暂无评论</div>
+        </div>
+        
+        <div class="work-section">
+            <div class="work-header">
+                <span class="work-index">#2</span>
+                <div class="work-info">
+                    <a href="https://www.xiaohongshu.com/explore/6a256e870000000015026de5" target="_blank" class="work-title">费德里科回到意大利主场，将证明自己的实力</a>
+                    <span class="work-meta">💬 0 条评论</span>
+                </div>
+            </div>
+            <div class="empty-sm">暂无评论</div>
+        </div>
+        
+        <div class="work-section">
+            <div class="work-header">
+                <span class="work-index">#3</span>
+                <div class="work-info">
+                    <a href="https://www.xiaohongshu.com/explore/6a2297c1000000003603294e" target="_blank" class="work-title">德比斯得了5个分站冠军，7年测试车手没白当！</a>
+                    <span class="work-meta">💬 0 条评论</span>
+                </div>
+            </div>
+            <div class="empty-sm">暂无评论</div>
+        </div>
+        
+        <div class="work-section">
+            <div class="work-header">
+                <span class="work-index">#4</span>
+                <div class="work-info">
+                    <a href="https://www.xiaohongshu.com/explore/6a210c39000000003701f1e7" target="_blank" class="work-title">德比斯真的太会了！难道他背后有高人指点吗</a>
+                    <span class="work-meta">💬 0 条评论</span>
+                </div>
+            </div>
+            <div class="empty-sm">暂无评论</div>
+        </div>
+        
+        <div class="work-section">
+            <div class="work-header">
+                <span class="work-index">#5</span>
+                <div class="work-info">
+                    <a href="https://www.xiaohongshu.com/explore/6a2003b5000000003601b141" target="_blank" class="work-title">德比斯换了车队？这应该是携号转网成功了吧</a>
+                    <span class="work-meta">💬 0 条评论</span>
+                </div>
+            </div>
+            <div class="empty-sm">暂无评论</div>
+        </div>
+        
+
+<div class="footer">由评论区爬取工具自动生成 · 2026-07-02 16:00:04</div>
+</div>
+</body>
+</html>

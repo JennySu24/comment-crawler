@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>评论区爬取报告 - B站 (Bilibili)</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6fa; color: #2c3e50; line-height:1.6; }
+.report { max-width:900px; margin:0 auto; padding:24px 16px; }
+.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:#fff; border-radius:16px; padding:32px; margin-bottom:24px; box-shadow: 0 4px 20px rgba(102,126,234,.3); }
+.header h1 { font-size:26px; margin-bottom:12px; }
+.meta { display:flex; flex-wrap:wrap; gap:16px; font-size:14px; opacity:.9; }
+.meta span { background:rgba(255,255,255,.2); padding:4px 12px; border-radius:20px; }
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:16px; margin-bottom:32px; }
+.stat-card { background:#fff; border-radius:12px; padding:20px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+.stat-num { font-size:32px; font-weight:700; color:#667eea; }
+.stat-label { font-size:13px; color:#888; margin-top:4px; }
+.section-title { font-size:20px; font-weight:600; margin-bottom:16px; color:#333; }
+.comment-card { background:#fff; border-radius:12px; padding:20px; margin-bottom:12px; box-shadow:0 1px 4px rgba(0,0,0,.05); transition:box-shadow .2s; }
+.comment-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.1); }
+.card-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+.username { font-weight:600; color:#333; font-size:15px; }
+.ip-tag { font-size:11px; background:#f0f0f0; color:#999; padding:2px 8px; border-radius:10px; }
+.time { font-size:12px; color:#aaa; margin-left:auto; }
+.card-body { font-size:15px; line-height:1.8; white-space:pre-wrap; word-break:break-word; color:#444; }
+.cmt-img-wrap { display:inline-block; margin:8px 8px 0 0; }
+.cmt-img-wrap img { max-width:180px; max-height:180px; border-radius:8px; border:1px solid #eee; cursor:pointer; object-fit:cover; }
+.card-footer { margin-top:12px; display:flex; gap:16px; }
+.card-footer .stat { font-size:13px; color:#888; }
+.replies-section { margin-top:12px; padding-top:12px; border-top:1px solid #f0f0f0; }
+.reply-item { padding:6px 0; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; font-size:13px; }
+.reply-user { font-weight:600; color:#667eea; white-space:nowrap; }
+.reply-text { color:#555; flex:1; }
+.reply-meta { font-size:11px; color:#bbb; white-space:nowrap; }
+.more-replies { font-size:12px; color:#aaa; padding:4px 0; }
+.footer { text-align:center; padding:24px; color:#bbb; font-size:12px; }
+.empty { text-align:center; padding:60px 20px; color:#bbb; font-size:16px; }
+@media print { body { background:#fff; } .header { box-shadow:none; } }
+</style>
+</head>
+<body>
+<div class="report">
+<div class="header">
+    <h1>📊 评论区爬取报告</h1>
+    <div class="meta">
+        <span>平台: B站 (Bilibili)</span>
+        <span>来源: https://www.bilibili.com/video/BV1SdJ36AEPf/?spm_id_from=333.1007.tianma.5-3-17.click&amp;vd_source=9db1d6c1ff843d7d3db2c8e685761076</span>
+        <span>爬取时间: 2026-07-03 10:48:28</span>
+    </div>
+</div>
+
+<div class="stats">
+    <div class="stat-card"><div class="stat-num">3</div><div class="stat-label">总评论数</div></div>
+    <div class="stat-card"><div class="stat-num">0</div><div class="stat-label">图片数</div></div>
+    <div class="stat-card"><div class="stat-num">1</div><div class="stat-label">总回复数</div></div>
+    <div class="stat-card"><div class="stat-num">6</div><div class="stat-label">总点赞数</div></div>
+</div>
+
+<h2 class="section-title">💬 评论列表 (3)</h2>
+
+        <div class="comment-card">
+            <div class="card-header">
+                <span class="username">半眠日记Daisy</span>
+                
+                <span class="time">2026-06-16 13:44:25</span>
+            </div>
+            <div class="card-body">接邓佳鑫事业运[打call][打call]跟过去说拜拜，未来一定前途似锦</div>
+            
+            <div class="card-footer">
+                <span class="stat">👍 6</span>
+                
+            </div>
+            
+        </div>
+        
+        <div class="comment-card">
+            <div class="card-header">
+                <span class="username">晚安昂音</span>
+                
+                <span class="time">2026-06-18 19:13:45</span>
+            </div>
+            <div class="card-body">[打call][打call]</div>
+            
+            <div class="card-footer">
+                <span class="stat">👍 0</span>
+                
+            </div>
+            
+        </div>
+        
+        <div class="comment-card">
+            <div class="card-header">
+                <span class="username">拉倒ruai咪</span>
+                
+                <span class="time">2026-06-15 22:27:53</span>
+            </div>
+            <div class="card-body">素材好新哈哈哈哈</div>
+            
+            <div class="card-footer">
+                <span class="stat">👍 0</span>
+                <span class="stat">💬 1 回复</span>
+            </div>
+            <div class="replies-section"><div class="reply-item"><span class="reply-user">一口甜嘟</span><span class="reply-text">这次官摄出来之前就已经是半成品了哈哈哈哈[doge]</span><span class="reply-meta">2026-06-16 13:46:50 · 1 赞</span></div></div>
+        </div>
+        
+
+<div class="footer">由评论区爬取工具自动生成 · 2026-07-03 10:48:28</div>
+</div>
+</body>
+</html>

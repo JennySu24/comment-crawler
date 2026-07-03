@@ -1,0 +1,67 @@
+{
+  "platform": "小红书",
+  "url": "https://www.xiaohongshu.com/explore/6a463450000000001c025e4f?xsec_token=ABENzK09V-mZ3uFwwzPllSw8usxdZNSyZWiMOHH4eFYpY=&xsec_source=pc_user",
+  "total_comments": 6,
+  "fetched_top_comments": 5,
+  "fetched_reply_comments": 1,
+  "reply_total_estimate": 1,
+  "comments": [
+    {
+      "username": "未知用户",
+      "content": "53号得比斯的合约酬金搞不好还没有64号的多",
+      "time": "1782989666000",
+      "likes": 1,
+      "ip_location": "",
+      "images": [],
+      "replies": [
+        {
+          "username": "未知用户",
+          "content": "听说一开始签的合同就是二号车手，他表现更好，就侧重他为中心，转一号车手位，下半年好像涨了工资的，另外又签了后面几年的合同，不知道是不是真的[笑哭R]",
+          "time": "1782995891000",
+          "likes": 0
+        }
+      ],
+      "reply_count": 1
+    },
+    {
+      "username": "未知用户",
+      "content": "他手腕子的伤可能真挺严重的[汗颜R]",
+      "time": "1782990671000",
+      "likes": 2,
+      "ip_location": "",
+      "images": [],
+      "replies": [],
+      "reply_count": 0
+    },
+    {
+      "username": "未知用户",
+      "content": "绝对的人车合一 当之无愧的车神[派对R][派对R][派对R]",
+      "time": "1782986278000",
+      "likes": 2,
+      "ip_location": "",
+      "images": [],
+      "replies": [],
+      "reply_count": 0
+    },
+    {
+      "username": "未知用户",
+      "content": "加油加油！[点赞R][加油R]",
+      "time": "1783001569000",
+      "likes": 0,
+      "ip_location": "",
+      "images": [],
+      "replies": [],
+      "reply_count": 0
+    },
+    {
+      "username": "未知用户",
+      "content": "加油吧卡苏洛，哪怕你能稳定在第十左右，也不慌的。现在连前十五都不稳，确实差点意思。",
+      "time": "1782994001000",
+      "likes": 0,
+      "ip_location": "",
+      "images": [],
+      "replies": [],
+      "reply_count": 0
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+[0702/130255.917:ERROR:gpu\command_buffer\service\gl_utils.cc:430] [.WebGL-0x2f1404369200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>评论区爬取工具</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #f0f2f5; color: #333; min-height:100vh;
+}
+.container { max-width:800px; margin:0 auto; padding:24px 16px; }
+
+.header { text-align:center; padding:32px 0 24px; }
+.header h1 { font-size:28px; background:linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.header p { color:#888; margin-top:6px; font-size:14px; }
+
+.card {
+  background:#fff; border-radius:16px; padding:24px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+  margin-bottom:20px;
+}
+.card-title { font-size:17px; font-weight:600; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+
+/* 模式切换 */
+.mode-tabs { display:flex; gap:0; margin-bottom:20px; background:#f0f2f5; border-radius:10px; padding:4px; }
+.mode-tab {
+  flex:1; text-align:center; padding:8px 16px; border-radius:8px; cursor:pointer;
+  font-size:14px; font-weight:500; color:#888; transition:all .2s; border:none; background:none;
+}
+.mode-tab.active { background:#fff; color:#667eea; font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+
+/* 平台选择 */
+.platforms { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:8px; }
+.platform-card {
+  padding:16px; border:2px solid #e8e8e8; border-radius:12px;
+  cursor:pointer; transition:all .2s; text-align:center; position:relative;
+}
+.platform-card:hover { border-color:#667eea; }
+.platform-card.active { border-color:#667eea; background:#f5f3ff; }
+.platform-card .icon { font-size:32px; margin-bottom:8px; display:block; }
+.platform-card .name { font-weight:600; font-size:15px; }
+.platform-card .hint { font-size:12px; color:#999; margin-top:4px; }
+.platform-card .check {
+  position:absolute; top:8px; right:8px; width:22px; height:22px;
+  border-radius:50%; background:#667eea; color:#fff; display:none;
+  align-items:center; justify-content:center; font-size:13px;
+}
+.platform-card.active .check { display:flex; }
+
+.url-input {
+  width:100%; padding:12px 16px; border:2px solid #e0e0e0; border-radius:10px;
+  font-size:15px; outline:none; transition:border-color .2s;
+}
+.url-input:focus { border-color:#667eea; }
+.url-input::placeholder { color:#bbb; }
+
+.form-row { display:flex; gap:16px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+.form-row label { font-size:14px; color:#666; white-space:nowrap; }
+.form-row select, .form-row input[type=number] {
+  padding:8px 12px; border:1px solid #e0e0e0; border-radius:8px; font-size:14px; outline:none;
+}
+.form-row select:focus, .form-row input[type=number]:focus { border-color:#667eea; }
+
+.btn {
+  padding:12px 28px; border:none; border-radius:10px; font-size:15px; font-weight:600;
+  cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:6px;
+}
+.btn-primary {
+  background:linear-gradient(135deg, #667eea, #764ba2); color:#fff;
+  box-shadow:0 4px 12px rgba(102,126,234,.3);
+}
+.btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(102,126,234,.4); }
+.btn-primary:disabled { background:#ccc; cursor:not-allowed; box-shadow:none; transform:none; }
+.btn-outline { background:#fff; color:#667eea; border:2px solid #667eea; }
+.btn-outline:hover { background:#f5f3ff; }
+.btn-sm { padding:6px 14px; font-size:13px; border-radius:8px; }
+.btn-success { background:#10b981; color:#fff; }
+.btn-success:hover { background:#059669; }
+.btn-group { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+
+/* 进度 */
+.progress-section { margin-top:16px; display:none; }
+.progress-section.visible { display:block; }
+.progress-bar-wrap { background:#e8e8e8; border-radius:10px; height:10px; overflow:hidden; margin:12px 0; }
+.progress-bar { height:100%; background:linear-gradient(90deg, #667eea, #764ba2); border-radius:10px; transition:width .3s; width:0; }
+.progress-info { display:flex; justify-content:space-between; font-size:13px; color:#888; margin-bottom:6px; }
+.progress-info .percentage { font-weight:700; color:#667eea; }
+
+/* 结果 */
+.result-section { display:none; }
+.result-section.visible { display:block; }
+.result-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin:16px 0; }
+.result-stat { text-align:center; padding:12px; background:#f8f9ff; border-radius:10px; }
+.result-stat .num { font-size:24px; font-weight:700; color:#667eea; }
+.result-stat .label { font-size:12px; color:#888; margin-top:2px; }
+
+.comment-preview { max-height:400px; overflow-y:auto; margin-top:16px; }
+.preview-item {
+  padding:12px; border-bottom:1px solid #f0f0f0;
+  display:flex; gap:10px; align-items:flex-start;
+}
+.preview-item:last-child { border-bottom:none; }
+.preview-avatar {
+  width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg, #667eea, #764ba2);
+  color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px;
+  flex-shrink:0;
+}
+.preview-content { flex:1; min-width:0; }
+.preview-user { font-weight:600; font-size:14px; }
+.preview-text { font-size:14px; color:#555; margin-top:2px; word-break:break-word; white-space:pre-wrap; }
+.preview-meta { font-size:12px; color:#aaa; margin-top:4px; }
+
+.error-msg { background:#fff2f0; border:1px solid #ffccc7; border-radius:10px; padding:12px 16px; color:#cf1322; font-size:14px; margin-top:16px; display:none; }
+.error-msg.visible { display:block; }
+.success-msg { background:#f6ffed; border:1px solid #b7eb8f; border-radius:10px; padding:12px 16px; color:#389e0d; font-size:14px; margin-top:16px; display:none; }
+.success-msg.visible { display:block; }
+
+.spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .6s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.footer { text-align:center; padding:32px 16px; color:#bbb; font-size:12px; }
+
+.login-modal {
+  display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,.5); z-index:100; align-items:center; justify-content:center;
+}
+.login-modal.visible { display:flex; }
+.login-modal .modal-card {
+  background:#fff; border-radius:16px; padding:32px; max-width:400px; width:90%; text-align:center;
+}
+.login-modal .modal-card h3 { margin-bottom:12px; }
+.login-modal .modal-card p { color:#666; margin-bottom:20px; font-size:14px; line-height:1.6; }
+
+@media (max-width:600px) {
+  .platforms { grid-template-columns:1fr 1fr; }
+  .header h1 { font-size:22px; }
+  .btn { padding:10px 20px; font-size:14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>📊 评论区爬取工具</h1>
+    <p>支持 B站 / 小红书 / 抖音 · 输入账号即可批量爬取</p>
+  </div>
+
+  <!-- 平台选择 -->
+  <div class="card">
+    <div class="card-title">🎯 选择平台</div>
+    <div class="platforms" id="platforms">
+      <div class="platform-card active" data-platform="bilibili">
+        <span class="check">✓</span>
+        <span class="icon">📺</span>
+        <div class="name">B站</div>
+        <div class="hint">无需登录 · API直连</div>
+      </div>
+      <div class="platform-card" data-platform="xiaohongshu">
+        <span class="check">✓</span>
+        <span class="icon">📕</span>
+        <div class="name">小红书</div>
+        <div class="hint">推荐登录后使用</div>
+      </div>
+      <div class="platform-card" data-platform="douyin">
+        <span class="check">✓</span>
+        <span class="icon">🎵</span>
+        <div class="name">抖音</div>
+        <div class="hint">推荐登录后使用</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模式切换 + 链接输入 -->
+  <div class="card">
+    <div class="mode-tabs">
+      <button class="mode-tab active" data-mode="account" onclick="switchMode('account')">🏠 账号主页</button>
+      <button class="mode-tab" data-mode="single" onclick="switchMode('single')">🔗 单个作品</button>
+    </div>
+
+    <div class="card-title" id="inputLabel">🔗 输入账号主页链接</div>
+    <input type="text" class="url-input" id="urlInput"
+      placeholder="粘贴账号主页链接，例如: https://space.bilibili.com/123456">
+
+    <div class="form-row" id="accountSettings">
+      <label>最多爬取作品数:</label>
+      <select id="maxWorks">
+        <option value="all">全部作品</option>
+        <option value="5">5 个作品</option>
+        <option value="10">10 个作品</option>
+        <option value="20" selected>20 个作品</option>
+        <option value="30">30 个作品</option>
+        <option value="50">50 个作品</option>
+      </select>
+      <label>每个作品评论页数:</label>
+      <select id="maxPages">
+        <option value="all">全部评论页</option>
+        <option value="2">2 页</option>
+        <option value="3" selected>3 页</option>
+        <option value="5">5 页</option>
+        <option value="10">10 页</option>
+      </select>
+    </div>
+
+    <div class="form-row" id="singleSettings" style="display:none;">
+      <label>评论范围:</label>
+      <span style="font-size:14px;color:#666;">自动抓取当前作品全部可获取评论，直到没有更多数据</span>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" id="startBtn" onclick="startCrawl()">
+        🚀 开始爬取
+      </button>
+      <button class="btn btn-outline btn-sm" id="loginBtn" onclick="showLogin()" style="display:none;">
+        🔑 扫码登录
+      </button>
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- 进度条 -->
+  <div class="card progress-section" id="progressSection">
+    <div class="card-title">⏳ 爬取进度</div>
+    <div class="progress-info">
+      <span id="progressStatus">正在初始化...</span>
+      <span class="percentage" id="progressPercent">0%</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div id="progressDetail" style="font-size:13px;color:#888;"></div>
+  </div>
+
+  <!-- 结果 -->
+  <div class="card result-section" id="resultSection">
+    <div class="card-title">✅ 爬取完成</div>
+    <div class="result-stats" id="resultStats"></div>
+    <div class="comment-preview" id="commentPreview"></div>
+    <div class="btn-group" id="downloadButtons"></div>
+  </div>
+
+  <div class="footer">评论区爬取工具 v2.0 · 仅供学习研究使用</div>
+</div>
+
+<!-- 登录提示弹窗 -->
+<div class="login-modal" id="loginModal">
+  <div class="modal-card">
+    <h3>🔐 需要登录</h3>
+    <p>该平台需要登录后才能爬取评论区。<br>点击确认后，将打开浏览器窗口，<br>请扫码登录，并在完成后关闭浏览器窗口以保存登录状态。</p>
+    <div class="btn-group" style="justify-content:center;">
+      <button class="btn btn-outline btn-sm" onclick="closeLogin()">取消</button>
+      <button class="btn btn-primary btn-sm" id="confirmLogin" onclick="doLogin()">打开浏览器登录</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedPlatform = 'bilibili';
+let currentMode = 'account';  // 'account' | 'single'
+let currentTaskId = null;
+let eventSource = null;
+
+// ---- 模式切换 ----
+function switchMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+
+  const label = document.getElementById('inputLabel');
+  const input = document.getElementById('urlInput');
+  document.getElementById('accountSettings').style.display = mode === 'account' ? '' : 'none';
+  document.getElementById('singleSettings').style.display = mode === 'single' ? '' : 'none';
+
+  if (mode === 'account') {
+    label.textContent = '🏠 输入账号主页链接';
+    input.placeholder = getAccountPlaceholder();
+  } else {
+    label.textContent = '🔗 输入作品链接';
+    input.placeholder = getSinglePlaceholder();
+  }
+}
+
+function getAccountPlaceholder() {
+  const map = {
+    bilibili: '粘贴B站用户主页或UID，例如: https://space.bilibili.com/123456',
+    xiaohongshu: '粘贴小红书用户主页，例如: https://www.xiaohongshu.com/user/profile/xxx',
+    douyin: '粘贴抖音用户主页，例如: https://www.douyin.com/user/MS4wLjABAAAAxxx'
+  };
+  return map[selectedPlatform] || '';
+}
+
+function getSinglePlaceholder() {
+  const map = {
+    bilibili: '粘贴B站视频链接，例如: https://www.bilibili.com/video/BV1xx411c7mD',
+    xiaohongshu: '粘贴小红书笔记链接，例如: https://www.xiaohongshu.com/explore/64a1b2c3000000000102d4e5',
+    douyin: '粘贴抖音视频链接，例如: https://www.douyin.com/video/7123456789012345678'
+  };
+  return map[selectedPlatform] || '';
+}
+
+function parseOptionalLimit(value) {
+  if (value === null || value === undefined) return null;
+  const text = String(value).trim().toLowerCase();
+  if (!text || text === '0' || text === 'all') return null;
+  const parsed = Number.parseInt(text, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+// ---- 平台选择 ----
+document.querySelectorAll('.platform-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.platform-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    selectedPlatform = card.dataset.platform;
+    updateLoginBtn();
+    document.getElementById('urlInput').placeholder =
+      currentMode === 'account' ? getAccountPlaceholder() : getSinglePlaceholder();
+  });
+});
+
+function updateLoginBtn() {
+  const btn = document.getElementById('loginBtn');
+  // B站账号级爬取有时需要登录，所以始终显示登录按钮
+  btn.style.display = 'inline-flex';
+}
+
+// ---- 登录 ----
+function showLogin() { document.getElementById('loginModal').classList.add('visible'); }
+function closeLogin() { document.getElementById('loginModal').classList.remove('visible'); }
+
+async function doLogin() {
+  closeLogin();
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = '登录中...';
+  try {
+    const resp = await fetch(`/api/login/${selectedPlatform}`, { method: 'POST' });
+    const data = await resp.json();
+    showSuccess(data.message || '请在打开的浏览器窗口中完成登录');
+  } catch(e) { showError('打开登录窗口失败: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = '🔑 扫码登录'; }
+}
+
+// ---- 智能识别链接类型 ----
+function detectUrlType(platform, url) {
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(url);
+  } catch (e) {
+    return null;
+  }
+  const lower = url.toLowerCase();
+  const pathname = parsedUrl.pathname.toLowerCase();
+  const modalId = parsedUrl.searchParams.get('modal_id');
+
+  if (platform === 'douyin' && /^\d+$/.test(modalId || '')) return 'single';
+
+  // 用户主页特征
+  if (platform === 'bilibili' && (lower.includes('space.bilibili.com') || /^\d+$/.test(url.trim()))) return 'account';
+  if (platform === 'xiaohongshu' && lower.includes('xiaohongshu.com/user/profile')) return 'account';
+  if (platform === 'douyin' && (lower.includes('douyin.com/user') || lower.includes('douyin.com/user/'))) return 'account';
+
+  // 单作品特征
+  if (platform === 'bilibili' && (pathname.includes('/video/') || pathname.includes('/bangumi/'))) return 'single';
+  if (platform === 'xiaohongshu' && (pathname.includes('/explore/') || pathname.includes('/discovery/item/'))) return 'single';
+  if (platform === 'douyin' && (pathname.includes('/video/') || pathname.includes('/note/'))) return 'single';
+
+  return null;  // 无法识别
+}
+
+// ---- 校验 ----
+function validateInput(platform, url, mode) {
+  try { new URL(url); } catch (e) { return '链接格式不正确，请检查是否包含 http:// 或 https://'; }
+
+  const detected = detectUrlType(platform, url);
+  if (!detected) {
+    const tips = { bilibili: '视频链接或用户主页', xiaohongshu: '笔记链接或用户主页(含user/profile)', douyin: '视频链接或用户主页(含douyin.com/user)' };
+    return `无法识别该链接类型，请粘贴${tips[platform] || '有效链接'}（如从分享复制）`;
+  }
+
+  // 模式不匹配时给出友好提示
+  if (detected !== mode) {
+    const modeNames = { account: '账号主页链接', single: '单个作品链接' };
+    return `这看起来是${modeNames[detected]}，已自动切换模式，请再点一次「开始爬取」`;
+  }
+
+  return null;
+}
+
+// ---- 爬取 ----
+async function startCrawl() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { showError('请粘贴链接'); return; }
+
+  // 智能识别链接类型，自动切换模式
+  const detected = detectUrlType(selectedPlatform, url);
+  if (detected && detected !== currentMode) {
+    switchMode(detected);
+    document.getElementById('urlInput').value = url;  // 保留输入
+    showSuccess(`已自动切换为「${detected === 'account' ? '账号主页' : '单个作品'}」模式，再次点击即可开始`);
+    return;  // 让用户再点一次确认
+  }
+
+  const err = validateInput(selectedPlatform, url, currentMode);
+  if (err) { showError(err); return; }
+
+  hideError(); hideResult();
+
+  const btn = document.getElementById('startBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 正在启动...';
+
+  let endpoint, body;
+
+  if (currentMode === 'account') {
+    endpoint = '/api/crawl-account';
+    body = {
+      platform: selectedPlatform,
+      account_url: url,
+      max_works: parseOptionalLimit(document.getElementById('maxWorks').value),
+      max_pages: parseOptionalLimit(document.getElementById('maxPages').value),
+    };
+  } else {
+    endpoint = '/api/crawl';
+    body = {
+      platform: selectedPlatform,
+      url: url,
+    };
+  }
+
+  try {
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      throw new Error(errData.detail || '请求失败');
+    }
+    const data = await resp.json();
+    currentTaskId = data.task_id;
+    showProgress();
+    startSSE(currentTaskId);
+  } catch(e) {
+    showError(e.message);
+    btn.disabled = false;
+    btn.innerHTML = '🚀 开始爬取';
+  }
+}
+
+function startSSE(taskId) {
+  if (eventSource) eventSource.close();
+  eventSource = new EventSource(`/api/task/${taskId}/stream`);
+
+  eventSource.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    updateProgressUI(data);
+
+    if (data.status === 'completed') {
+      eventSource.close(); eventSource = null;
+      onComplete(taskId, data);
+    } else if (data.status === 'error') {
+      eventSource.close(); eventSource = null;
+      showError(data.error || '未知错误');
+      document.getElementById('startBtn').disabled = false;
+      document.getElementById('startBtn').innerHTML = '🚀 开始爬取';
+    }
+  };
+
+  eventSource.onerror = () => {
+    eventSource.close(); eventSource = null;
+    startPolling(taskId);
+  };
+}
+
+function startPolling(taskId) {
+  const interval = setInterval(async () => {
+    try {
+      const resp = await fetch(`/api/task/${taskId}`);
+      const data = await resp.json();
+      updateProgressUI(data);
+      if (data.status === 'completed') {
+        clearInterval(interval); onComplete(taskId, data);
+      } else if (data.status === 'error') {
+        clearInterval(interval);
+        showError(data.error || '未知错误');
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('startBtn').innerHTML = '🚀 开始爬取';
+      }
+    } catch(e) {}
+  }, 1500);
+}
+
+function updateProgressUI(data) {
+  const pct = Math.max(0, Math.min(100, Math.round(data.progress || 0)));
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressPercent').textContent = pct + '%';
+
+  if (data.current_work) {
+    document.getElementById('progressStatus').textContent = data.current_work;
+  } else if (pct < 20) {
+    document.getElementById('progressStatus').textContent = '正在连接平台...';
+  } else if (pct < 80) {
+    document.getElementById('progressStatus').textContent = '正在爬取评论...';
+  } else if (pct < 100) {
+    document.getElementById('progressStatus').textContent = '正在生成报告...';
+  }
+
+  let detail = '';
+  if (data.works_total) {
+    detail = `作品进度: ${data.works_done || 0} / ${data.works_total}`;
+  }
+  if (data.total) detail += (detail ? ' · ' : '') + `已获取 ${data.total} 条评论`;
+  document.getElementById('progressDetail').textContent = detail;
+}
+
+async function onComplete(taskId, data) {
+  document.getElementById('progressBar').style.width = '100%';
+  document.getElementById('progressPercent').textContent = '100%';
+  document.getElementById('progressStatus').textContent = '✅ 爬取完成!';
+
+  let detail = `共获取 ${data.total || 0} 条评论`;
+  if (data.works_total) detail += `，来自 ${data.works_total} 个作品`;
+  document.getElementById('progressDetail').textContent = detail;
+
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('startBtn').innerHTML = '🚀 开始爬取';
+
+  // 加载预览（取 JSON 的前几条）
+  try {
+    const resp = await fetch(`/api/download/${taskId}?fmt=json`);
+    if (resp.ok) {
+      const jsonData = await resp.json();
+      showResult(taskId, jsonData);
+    }
+  } catch(e) {}
+}
+
+function showProgress() {
+  document.getElementById('progressSection').classList.add('visible');
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('progressPercent').textContent = '0%';
+  document.getElementById('progressStatus').textContent = '正在初始化...';
+  document.getElementById('progressDetail').textContent = '';
+}
+
+function hideResult() {
+  document.getElementById('resultSection').classList.remove('visible');
+}
+
+function showResult(taskId, data) {
+  const section = document.getElementById('resultSection');
+  section.classList.add('visible');
+
+  // 兼容单作品和账户格式
+  let totalComments, totalWorks;
+  let comments = [];
+  if (data.works) {
+    totalWorks = data.works.length;
+    totalComments = data.total_comments || 0;
+    comments = data.works.flatMap(w => w.comments || []);
+  } else {
+    totalWorks = 1;
+    totalComments = Array.isArray(data) ? data.length : (data.total_comments || 0);
+    comments = Array.isArray(data) ? data : (data.comments || []);
+  }
+
+  let totalLikes = 0, totalImages = 0;
+
+  for (const c of comments) {
+    totalLikes += c.likes || 0;
+    totalImages += (c.images || []).length;
+  }
+
+  document.getElementById('resultStats').innerHTML = `
+    <div class="result-stat"><div class="num">${totalWorks}</div><div class="label">作品数</div></div>
+    <div class="result-stat"><div class="num">${totalComments}</div><div class="label">总评论</div></div>
+    <div class="result-stat"><div class="num">${totalImages}</div><div class="label">图片</div></div>
+    <div class="result-stat"><div class="num">${totalLikes}</div><div class="label">点赞</div></div>
+  `;
+
+  const preview = comments.slice(0, 15).map(c => {
+    const initial = (c.username || '?')[0];
+    const imgs = (c.images && c.images.length > 0)
+      ? `<br><span style="font-size:12px;color:#667eea;">📷 ${c.images.length} 张图片</span>`
+      : '';
+    return `
+      <div class="preview-item">
+        <div class="preview-avatar">${escHtml(initial)}</div>
+        <div class="preview-content">
+          <div class="preview-user">${escHtml(c.username)}</div>
+          <div class="preview-text">${escHtml(c.content)}${imgs}</div>
+          <div class="preview-meta">👍 ${c.likes || 0} · ${c.time || ''}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const previewHint = (!data.works && data.fetched_top_comments && data.total_comments > data.fetched_top_comments)
+    ? `<div style="padding:0 0 12px;color:#888;font-size:13px;">当前作品平台显示 ${data.total_comments} 条评论，其中已抓到 ${data.fetched_top_comments} 条主评论；其余多为楼中楼回复。</div>`
+    : '';
+
+  document.getElementById('commentPreview').innerHTML = previewHint + (preview || '<div style="text-align:center;color:#ccc;padding:20px;">暂无评论数据</div>');
+
+  document.getElementById('downloadButtons').innerHTML = `
+    <button class="btn btn-success" onclick="downloadFile('${taskId}', 'html')">📄 下载 HTML 报告</button>
+    <button class="btn btn-outline btn-sm" onclick="downloadFile('${taskId}', 'json')">📋 下载 JSON 数据</button>
+  `;
+}
+
+function downloadFile(taskId, fmt) {
+  window.open(`/api/download/${taskId}?fmt=${fmt}`, '_blank');
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = '❌ ' + msg;
+  el.className = 'error-msg visible';
+}
+
+function hideError() {
+  const el = document.getElementById('errorMsg');
+  el.textContent = '';
+  el.className = 'error-msg';
+}
+
+function showSuccess(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = '✅ ' + msg;
+  el.className = 'success-msg visible';
+  setTimeout(() => {
+    if (el.textContent.startsWith('✅')) {
+      el.className = 'success-msg';
+    }
+  }, 5000);
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
