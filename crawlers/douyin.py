@@ -16,6 +16,7 @@ COOKIE_FILE = COOKIE_DIR / "douyin.json"
 
 class DouyinCrawler(BaseCrawler):
     platform_name = "douyin"
+    login_mode = "none"
     display_name = "抖音"
 
     def extract_id(self, url: str) -> str:
@@ -43,12 +44,61 @@ class DouyinCrawler(BaseCrawler):
 
     async def _load_cookies(self, context):
         COOKIE_DIR.mkdir(parents=True, exist_ok=True)
-        if COOKIE_FILE.exists():
-            with open(COOKIE_FILE, "r") as f:
-                cookies = json.load(f)
-            await context.add_cookies(cookies)
-            return True
+        safe_cookies = self._read_safe_cookies()
+        if safe_cookies:
+            try:
+                await context.add_cookies(safe_cookies)
+                return True
+            except Exception:
+                return False
         return False
+
+    def _read_safe_cookies(self) -> List[dict]:
+        if not COOKIE_FILE.exists():
+            return []
+        try:
+            with open(COOKIE_FILE, "r", encoding="utf-8") as f:
+                cookies = json.load(f)
+        except Exception:
+            return []
+
+        if isinstance(cookies, dict):
+            cookies = cookies.get("cookies", [])
+
+        safe_cookies: List[dict] = []
+        for cookie in cookies or []:
+            if not isinstance(cookie, dict):
+                continue
+
+            name = str(cookie.get("name", "")).strip()
+            value = str(cookie.get("value", "")).strip()
+            domain = str(cookie.get("domain", "")).strip()
+            if not name or not value or not domain:
+                continue
+
+            safe_cookie = {
+                "name": name,
+                "value": value,
+                "domain": domain,
+                "path": cookie.get("path") or "/",
+                "httpOnly": bool(cookie.get("httpOnly", False)),
+                "secure": bool(cookie.get("secure", False)),
+            }
+
+            same_site = cookie.get("sameSite")
+            if same_site in {"Strict", "Lax", "None"}:
+                safe_cookie["sameSite"] = same_site
+
+            expires = cookie.get("expires")
+            if isinstance(expires, (int, float)) and expires > 0:
+                safe_cookie["expires"] = float(expires)
+
+            safe_cookies.append(safe_cookie)
+
+        return safe_cookies
+
+    def _has_saved_cookies(self) -> bool:
+        return bool(self._read_safe_cookies())
 
     async def _save_cookies(self, context):
         cookies = await context.cookies()
@@ -361,6 +411,20 @@ class DouyinCrawler(BaseCrawler):
         max_works: Optional[int] = 30,
         progress_callback: Optional[Callable] = None,
     ) -> List[WorkInfo]:
+        return await self._get_user_works_once(
+            user_input,
+            max_works=max_works,
+            progress_callback=progress_callback,
+            use_saved_cookies=False,
+        )
+
+    async def _get_user_works_once(
+        self,
+        user_input: str,
+        max_works: Optional[int] = 30,
+        progress_callback: Optional[Callable] = None,
+        use_saved_cookies: bool = False,
+    ) -> List[WorkInfo]:
         from playwright.async_api import async_playwright
 
         sec_uid = self._extract_user_id(user_input)
@@ -387,7 +451,8 @@ class DouyinCrawler(BaseCrawler):
                     "Chrome/125.0.0.0 Safari/537.36"
                 ),
             )
-            await self._load_cookies(context)
+            if use_saved_cookies:
+                await self._load_cookies(context)
             page = await context.new_page()
 
             async def on_response(response):
@@ -456,7 +521,8 @@ class DouyinCrawler(BaseCrawler):
 
                     await asyncio.sleep(1.5)
 
-                await self._save_cookies(context)
+                if use_saved_cookies:
+                    await self._save_cookies(context)
             except Exception as e:
                 raise Exception(f"获取抖音作品列表失败: {e}")
             finally:
@@ -471,6 +537,20 @@ class DouyinCrawler(BaseCrawler):
         url: str,
         max_pages: Optional[int] = None,
         progress_callback: Optional[Callable] = None,
+    ) -> List[Comment]:
+        return await self._get_comments_once(
+            url,
+            max_pages=max_pages,
+            progress_callback=progress_callback,
+            use_saved_cookies=False,
+        )
+
+    async def _get_comments_once(
+        self,
+        url: str,
+        max_pages: Optional[int] = None,
+        progress_callback: Optional[Callable] = None,
+        use_saved_cookies: bool = False,
     ) -> List[Comment]:
         from playwright.async_api import async_playwright
 
@@ -523,7 +603,8 @@ class DouyinCrawler(BaseCrawler):
                 ),
             )
 
-            await self._load_cookies(context)
+            if use_saved_cookies:
+                await self._load_cookies(context)
             page = await context.new_page()
             pending_responses = set()
 
@@ -631,7 +712,8 @@ class DouyinCrawler(BaseCrawler):
                 if comment_api_url and comments:
                     await self._attach_full_replies(page, comment_api_url, comments)
 
-                await self._save_cookies(context)
+                if use_saved_cookies:
+                    await self._save_cookies(context)
 
             except Exception as e:
                 raise Exception(f"抖音爬取出错: {e}")

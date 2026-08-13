@@ -17,6 +17,7 @@ COOKIE_FILE = COOKIE_DIR / "xiaohongshu.json"
 class XiaohongshuCrawler(BaseCrawler):
     platform_name = "xiaohongshu"
     display_name = "小红书"
+    login_mode = "none"
 
     BROWSER_ARGS = [
         "--no-sandbox",
@@ -332,7 +333,7 @@ class XiaohongshuCrawler(BaseCrawler):
                     ),
                 )
                 page = await context.new_page()
-                await page.goto("https://www.xiaohongshu.com", timeout=30000)
+                await page.goto("https://www.xiaohongshu.com", timeout=60000)
                 print("\n请在浏览器中扫码登录小红书。登录成功后直接关闭浏览器窗口，程序会自动保存 cookie。")
 
                 deadline = asyncio.get_running_loop().time() + 180
@@ -394,12 +395,23 @@ class XiaohongshuCrawler(BaseCrawler):
                         "Chrome/125.0.0.0 Safari/537.36"
                     ),
                 )
-                await self._load_cookies(context)
                 page = await context.new_page()
                 page.on("response", on_response)
 
-                await page.goto(profile_url, wait_until="domcontentloaded", timeout=30000)
-                await page.wait_for_timeout(4000)
+                # 加载已保存的 cookie
+                await self._load_cookies(context)
+
+                try:
+                    await page.goto(profile_url, wait_until="commit", timeout=60000)
+                    await page.wait_for_timeout(4000)
+                except Exception as goto_err:
+                    raise Exception(
+                        f"用户主页加载超时，可能原因：\n"
+                        f"1. 网络不稳定或需要代理\n"
+                        f"2. 小红书反爬拦截（建议先点击「登录」扫码登录后再爬取）\n"
+                        f"3. 用户主页链接无效\n"
+                        f"原始错误: {goto_err}"
+                    )
                 await self._drain_tasks(pending_responses)
 
                 if progress_callback:
@@ -456,10 +468,8 @@ class XiaohongshuCrawler(BaseCrawler):
 
                 if not works:
                     if await self._looks_like_login_required(page):
-                        raise Exception("小红书账号主页需要登录后访问，请先点击“扫码登录”，登录成功后关闭浏览器窗口再重试。")
-                    raise Exception("未从小红书账号主页抓到任何作品，可能是账号无公开作品、当前 cookie 已失效，或页面接口已变更。")
-
-                await self._save_cookies(context)
+                        raise Exception("小红书账号主页当前不支持匿名访问，或页面接口已变更。")
+                    raise Exception("未从小红书账号主页抓到任何作品，可能是账号无公开作品，或页面接口已变更。")
             except Exception as e:
                 raise Exception(f"获取小红书作品列表失败: {e}")
             finally:
@@ -515,12 +525,25 @@ class XiaohongshuCrawler(BaseCrawler):
                     ),
                 )
 
-                await self._load_cookies(context)
                 page = await context.new_page()
                 page.on("response", on_response)
 
-                await page.goto(note_url, wait_until="domcontentloaded", timeout=30000)
-                await page.wait_for_timeout(3000)
+                # 加载已保存的 cookie，避免被反爬拦截
+                await self._load_cookies(context)
+
+                # 访问笔记页面，使用更宽松的等待策略避免超时
+                try:
+                    await page.goto(note_url, wait_until="commit", timeout=60000)
+                    # "commit" 只等响应头返回，再手动等待关键内容出现
+                    await page.wait_for_timeout(3000)
+                except Exception as goto_err:
+                    raise Exception(
+                        f"页面加载超时，可能原因：\n"
+                        f"1. 网络不稳定或需要代理\n"
+                        f"2. 小红书反爬拦截（建议先点击「登录」扫码登录后再爬取）\n"
+                        f"3. 笔记链接已失效或需要登录才能查看\n"
+                        f"原始错误: {goto_err}"
+                    )
 
                 try:
                     for text in ("评论", "展开评论", "查看评论"):
@@ -605,9 +628,7 @@ class XiaohongshuCrawler(BaseCrawler):
                     await self._attach_full_replies(page, comment_api_url, comments)
 
                 if not comments and await self._looks_like_login_required(page):
-                    raise Exception("小红书笔记评论需要登录后访问，请先点击“扫码登录”，登录成功后关闭浏览器窗口再重试。")
-
-                await self._save_cookies(context)
+                    raise Exception("小红书笔记评论当前不支持匿名访问，或页面接口已变更。")
 
             except Exception as e:
                 raise Exception(f"小红书爬取出错: {e}")

@@ -163,13 +163,13 @@ body {
         <span class="check">✓</span>
         <span class="icon">📕</span>
         <div class="name">小红书</div>
-        <div class="hint">推荐登录后使用</div>
+        <div class="hint">匿名抓取 · 公开内容优先</div>
       </div>
       <div class="platform-card" data-platform="douyin">
         <span class="check">✓</span>
         <span class="icon">🎵</span>
         <div class="name">抖音</div>
-        <div class="hint">推荐登录后使用</div>
+        <div class="hint">匿名抓取 · 不复用本地登录态</div>
       </div>
     </div>
   </div>
@@ -215,7 +215,7 @@ body {
         🚀 开始爬取
       </button>
       <button class="btn btn-outline btn-sm" id="loginBtn" onclick="showLogin()" style="display:none;">
-        🔑 扫码登录
+        匿名模式
       </button>
     </div>
     <div class="error-msg" id="errorMsg"></div>
@@ -248,11 +248,11 @@ body {
 <!-- 登录提示弹窗 -->
 <div class="login-modal" id="loginModal">
   <div class="modal-card">
-    <h3>🔐 需要登录</h3>
-    <p>该平台需要登录后才能爬取评论区。<br>点击确认后，将打开浏览器窗口，<br>请扫码登录，并在完成后关闭浏览器窗口以保存登录状态。</p>
+    <h3>匿名抓取</h3>
+    <p>当前版本已关闭登录入口，所有平台都会优先按匿名方式抓取公开内容。</p>
     <div class="btn-group" style="justify-content:center;">
       <button class="btn btn-outline btn-sm" onclick="closeLogin()">取消</button>
-      <button class="btn btn-primary btn-sm" id="confirmLogin" onclick="doLogin()">打开浏览器登录</button>
+      <button class="btn btn-primary btn-sm" id="confirmLogin" onclick="doLogin()">我知道了</button>
     </div>
   </div>
 </div>
@@ -322,8 +322,7 @@ document.querySelectorAll('.platform-card').forEach(card => {
 
 function updateLoginBtn() {
   const btn = document.getElementById('loginBtn');
-  // B站账号级爬取有时需要登录，所以始终显示登录按钮
-  btn.style.display = 'inline-flex';
+  btn.style.display = 'none';
 }
 
 // ---- 登录 ----
@@ -332,14 +331,7 @@ function closeLogin() { document.getElementById('loginModal').classList.remove('
 
 async function doLogin() {
   closeLogin();
-  const btn = document.getElementById('loginBtn');
-  btn.disabled = true; btn.textContent = '登录中...';
-  try {
-    const resp = await fetch(`/api/login/${selectedPlatform}`, { method: 'POST' });
-    const data = await resp.json();
-    showSuccess(data.message || '请在打开的浏览器窗口中完成登录');
-  } catch(e) { showError('打开登录窗口失败: ' + e.message); }
-  finally { btn.disabled = false; btn.textContent = '🔑 扫码登录'; }
+  showSuccess('当前版本使用匿名抓取，已关闭登录入口。');
 }
 
 // ---- 智能识别链接类型 ----

@@ -19,6 +19,7 @@ from .base import BaseCrawler, Comment, CommentImage, WorkInfo
 class BilibiliCrawler(BaseCrawler):
     platform_name = "bilibili"
     display_name = "B站 (Bilibili)"
+    login_mode = "none"
 
     COOKIE_PATH = Path(__file__).resolve().parent.parent / "cookies" / "bilibili.json"
 
@@ -189,10 +190,8 @@ class BilibiliCrawler(BaseCrawler):
         page = 1
         page_size = 30
         limit = max_works if max_works and max_works > 0 else None
-        cookies = self._load_cookies()
-
         async with httpx.AsyncClient(
-            headers=self.HEADERS, timeout=20, cookies=cookies
+            headers=self.HEADERS, timeout=20
         ) as client:
             # 先拿指纹 cookie，与 WBI 密钥同一 session
             await self._fetch_fingerprint_cookies(client)
@@ -306,14 +305,6 @@ class BilibiliCrawler(BaseCrawler):
             )
 
             # 注入已保存的 cookies
-            cookies = self._load_cookies()
-            if cookies:
-                cookie_list = [
-                    {"name": k, "value": v, "domain": ".bilibili.com", "path": "/"}
-                    for k, v in cookies.items()
-                ]
-                await context.add_cookies(cookie_list)
-
             page = await context.new_page()
 
             async def on_response(response):
@@ -393,29 +384,21 @@ class BilibiliCrawler(BaseCrawler):
         progress_callback: Optional[Callable] = None,
     ) -> List[WorkInfo]:
         uid = self._extract_uid(user_input)
-        has_login = self._has_login_cookie()
-
         try:
-            # 优先走 API（快），若失败且已登录则走浏览器兜底
+            # 优先走 API（快），若受限则走匿名浏览器兜底
             return await self._get_user_works_api(uid, max_works, progress_callback)
         except Exception as api_err:
             err_msg = str(api_err)
             if "-352" in err_msg or "风控" in err_msg or "非 JSON" in err_msg:
-                # 已登录时带着 cookie 进入浏览器环境更容易通过风控；
-                # 未登录时也先尝试浏览器兜底，至少可以覆盖部分公开账号。
-                if not has_login:
-                    print("[B站] API 被风控拦截，尝试浏览器模式兜底；如仍失败，请先扫码登录后重试。")
+                print("[B站] API 被风控拦截，尝试匿名浏览器模式兜底。")
                 if progress_callback:
                     progress_callback(0)
                 try:
                     return await self._get_user_works_playwright(uid, max_works, progress_callback)
                 except Exception as browser_err:
-                    if not has_login:
-                        raise Exception(
-                            "B站 账号级爬取被风控拦截，浏览器兜底也未成功。请先在网页中点击「扫码登录」登录 B站，"
-                            "然后再输入账号主页链接爬取。"
-                        ) from browser_err
-                    raise
+                    raise Exception(
+                        "B站账号级爬取被风控拦截，匿名浏览器兜底也未成功。"
+                    ) from browser_err
             raise
 
     # ---- 视频信息 ----

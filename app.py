@@ -455,6 +455,8 @@ async def start_login(platform: str):
     if platform not in CRAWLERS:
         raise HTTPException(400, f"不支持的平台: {platform}")
     crawler = CRAWLERS[platform]
+    if getattr(crawler, "login_mode", "none") == "none":
+        return {"message": f"{crawler.display_name} 当前版本仅使用匿名抓取，已关闭登录入口"}
     if not hasattr(crawler, "login_interactive"):
         return {"message": f"{crawler.display_name} 不需要登录"}
 
@@ -475,7 +477,8 @@ async def list_platforms():
         {
             "id": c.platform_name,
             "name": c.display_name,
-            "needs_login": hasattr(c, "login_interactive"),
+            "login_mode": getattr(c, "login_mode", "none"),
+            "needs_login": getattr(c, "login_mode", "none") == "required",
             "api_based": c.platform_name == "bilibili",
         }
         for c in CRAWLERS.values()
@@ -776,9 +779,11 @@ if __name__ == "__main__":
             sys.exit(1)
         sys.exit(0)
 
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", "8765"))
     print("=" * 50)
     print("  评论区爬取工具 v1.0")
     print("  支持: B站 / 小红书 / 抖音")
-    print(f"  打开浏览器访问: http://127.0.0.1:8765")
+    print(f"  打开浏览器访问: http://127.0.0.1:{port}")
     print("=" * 50)
-    uvicorn.run(app, host="127.0.0.1", port=8765, log_level="info")
+    uvicorn.run(app, host=host, port=port, log_level="info")
